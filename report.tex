@@ -134,7 +134,10 @@ Mỗi thành viên review tối thiểu 3 file.
 \noindent\textbf{Phân công 2nd-reviewer (validate):}
 \begin{itemize}[noitemsep]
   \item Nguyễn Đức Phương validate các file của Lê Sĩ Nhật Quang.
-  \item \todo{Bổ sung người validate cho các file của Phương, Tài, Sơn, Phát}
+  \item Lê Sĩ Nhật Quang validate các file của Huỳnh Đức Tài.
+  \item Huỳnh Đức Tài validate các file của Đào Xuân Sơn.
+  \item Đào Xuân Sơn validate các file của Sơn Văn Phát.
+  \item Sơn Văn Phát validate các file của Nguyễn Đức Phương.
 \end{itemize}
 
 % ================= 3 =================
@@ -202,35 +205,45 @@ Ngoài ra có một số lỗi làm chương trình \textbf{không biên dịch 
 
 % ================= 5 =================
 \section{Extra: lỗi nghiêm trọng ngoài checklist}
-Các lỗi nghiêm trọng không thuộc 43 mục checklist, nhóm theo thành viên phát hiện:
 
-{\footnotesize
-\begin{longtable}{|L{3.4cm}|L{3.2cm}|L{7.6cm}|}
-\hline
-\rowcolor{gray!15}\textbf{File (dòng)} & \textbf{Loại lỗi} & \textbf{Tác động và đề xuất} \\ \hline
-\endhead
-\multicolumn{3}{|l|}{\textbf{Nguyễn Đức Phương}} \\ \hline
-\texttt{VilleService\-Impl} (98, 107, 115) & Cache không hoạt động do gọi method trong cùng class & Spring xử lý \texttt{@CachePut}/\texttt{@CacheEvict} thông qua proxy, nên lời gọi \texttt{this.deleteById()} hay \texttt{this.updateDTO()} từ bên trong class sẽ bỏ qua cache. Hậu quả: sau \texttt{delete(ville)}, \texttt{findDTOById(id)} vẫn trả về thành phố đã bị xoá. \textit{Đề xuất:} đặt annotation cache trực tiếp trên \texttt{delete()}/\texttt{update()}, hoặc gọi qua bean được inject. \\ \hline
-\texttt{AdminPassager\-Controller} và các file import \texttt{valIDation} & Mã nguồn không biên dịch được & Khi biên dịch thử phần server: \texttt{AdminPassagerController.java} thiếu dấu \texttt{\}} cuối file; một số file import sai tên package \texttt{jakarta.valIDation} và \texttt{org.springframework.valIDation} (đúng là \texttt{validation}, có vẻ do thay thế hàng loạt ``id'' thành ``ID''). Cùng với hai lỗi biên dịch ở Mục 4.2, dự án hiện không build được. \textit{Đề xuất:} bật build trên CI (Maven/Gradle) để chặn các commit không biên dịch được. \\ \hline
-\texttt{AdminStats\-Controller} (79--81, 114--116) & Không kiểm tra dữ liệu đầu vào & \texttt{quarter}, \texttt{threshold} và \texttt{year} không được kiểm tra khoảng giá trị (quý 1--4, ngưỡng 0--100\%). \textit{Đề xuất:} dùng Bean Validation (\texttt{@Min}, \texttt{@Max}, \texttt{@DecimalMin}, \texttt{@DecimalMax}) với \texttt{@Validated}. \\ \hline
-\multicolumn{3}{|l|}{\textbf{Lê Sĩ Nhật Quang}} \\ \hline
-\texttt{AdminBillet\-Controller} (75, 81) & Thiếu nhánh cập nhật & \texttt{saveBillet()} dùng cho cả thêm và sửa vé nhưng luôn gọi \texttt{billetService.create(billet)}, nên khi sửa sẽ tạo trùng bản ghi hoặc xung đột khoá chính. \textit{Đề xuất:} gọi \texttt{create} khi \texttt{billet.getId() == null}, ngược lại gọi \texttt{update}. \\ \hline
-\texttt{AdminBillet\-Controller} (118) & Dùng GET để xoá & \texttt{@GetMapping("/delete/\{id\}")} làm thay đổi dữ liệu qua GET: vi phạm chuẩn HTTP, dễ bị CSRF hoặc bị xoá nhầm khi trình duyệt tải trước link. \textit{Đề xuất:} \texttt{@PostMapping} hoặc \texttt{@DeleteMapping}. \\ \hline
-\texttt{AdminBillet\-}, \texttt{AdminClient\-Controller} & Lộ entity JPA, sai phân tầng & Nhận và trả thẳng entity \texttt{Billet}/\texttt{Client} qua \texttt{@ModelAttribute}, có nguy cơ Mass Assignment; logic gom nhóm dữ liệu (dòng 63--105) nằm trong controller. \textit{Đề xuất:} dùng DTO, chuyển logic xuống tầng Service. \\ \hline
-\texttt{AdminClient\-Controller} (59--105) & NPE, \texttt{IllegalState\-Exception} & Gọi \texttt{client.getReservations().stream()} mà không kiểm tra \texttt{null}; \texttt{Collectors.toMap()} không có hàm gộp nên lỗi khi trùng khoá. \textit{Đề xuất:} kiểm tra \texttt{null}, thêm hàm gộp \texttt{(a, b) -> a}. \\ \hline
-\multicolumn{3}{|l|}{\textbf{Đào Xuân Sơn}} \\ \hline
-\texttt{SideBarController} (42, 45) & Treo giao diện & Gọi API đồng bộ \texttt{Client.get("/search/")} ngay trong \texttt{Platform.runLater}, tức trên luồng giao diện. \textit{Đề xuất:} chạy trong \texttt{Task} hoặc \texttt{CompletableFuture}. \\ \hline
-\texttt{BookingDetails\-Controller} (36, 51) & Dữ liệu \texttt{static} dùng chung & \texttt{vol}, \texttt{reservation} là field \texttt{static}, dễ bị ghi đè giữa các cửa sổ. \textit{Đề xuất:} dùng field của instance. \\ \hline
-\texttt{BookingDetails\-Controller} (64--68) & Giao diện bị mờ vĩnh viễn & Hiệu ứng mờ chỉ được gỡ khi bấm nút Close của cửa sổ phụ (\texttt{PassengersInfoController}); đóng bằng cách khác (ví dụ Alt+F4) thì giao diện chính bị mờ mãi. \textit{Đề xuất:} gỡ hiệu ứng trong \texttt{setOnHidden}. \\ \hline
-\texttt{SignupController} (29--62) & Gửi lặp & Nút ``Next'' không bị vô hiệu hoá khi đang xử lý, nhấn đúp có thể tạo dữ liệu trùng. \textit{Đề xuất:} disable nút khi bắt đầu xử lý. \\ \hline
-\texttt{SignupController} (15, 18) & Lộ mật khẩu & Ô mật khẩu khai báo là \texttt{TextField} nên hiển thị rõ. \textit{Đề xuất:} dùng \texttt{PasswordField}. \\ \hline
-\multicolumn{3}{|l|}{\textbf{Sơn Văn Phát}} \\ \hline
-\texttt{PersonalInfo\-Controller} (73--76), \texttt{SearchResults\-Controller} (33--39, 79), \texttt{Client} (28, 54, 92, 130) & Treo giao diện do I/O đồng bộ & Các handler JavaFX gọi HTTP bằng OkHttp \texttt{execute()} (đồng bộ) trên luồng giao diện; trang kết quả còn gọi API giá cho từng chuyến bay. \textit{Đề xuất:} chạy request trong \texttt{Task}/\texttt{Executor}, chỉ cập nhật giao diện trên JavaFX Application Thread, disable nút khi đang gửi. \\ \hline
-\texttt{PersonalInfo\-Controller} (73--78) & Không tách đăng ký và đăng nhập & Đăng ký rồi đăng nhập trong cùng một \texttt{try/catch}: nếu đăng ký thành công nhưng đăng nhập lỗi, người dùng chỉ thấy lỗi chung và có thể đăng ký lại email đã tồn tại. \textit{Đề xuất:} xử lý riêng hai bước; báo tài khoản đã tạo và chuyển sang màn đăng nhập. \\ \hline
-\multicolumn{3}{|l|}{\textbf{Nhận xét chung (client)}} \\ \hline
-\texttt{BookingDetails\-}, \texttt{Signup\-}, \texttt{PassengerEditor\-Controller} & Trạng thái \texttt{static} giữa các màn hình & Dữ liệu được truyền qua field \texttt{static} (có chỗ \texttt{public static}). \textit{Đề xuất:} truyền qua instance controller (\texttt{FXMLLoader.getController()}). \\ \hline
-\end{longtable}
-}
+\subsection{Nguyễn Đức Phương}
+Trong quá trình review 3 tệp mã nguồn thuộc phân công (\texttt{VilleServiceImpl.java}, \texttt{AdminStatsController.java}, \texttt{UserDetailsImpl.java}), ngoài các lỗi nằm trong 43 tiêu chí của Check-list, phát hiện 2 vấn đề nghiêm trọng:
+\begin{itemize}
+  \item \textbf{Cache không hoạt động do gọi method trong cùng class trong \texttt{VilleServiceImpl.java} (Dòng 98, 107, 115):} Spring xử lý \texttt{@CachePut}/\texttt{@CacheEvict} thông qua proxy, nên lời gọi \texttt{this.deleteById()} hay \texttt{this.updateDTO()} từ bên trong class sẽ bỏ qua cache. Hậu quả: sau \texttt{delete(ville)}, \texttt{findDTOById(id)} vẫn trả về thành phố đã bị xoá. \textit{Đề xuất:} đặt annotation cache trực tiếp trên \texttt{delete()}/\texttt{update()}, hoặc gọi qua bean được inject.
+  \item \textbf{Không kiểm tra dữ liệu đầu vào trong \texttt{AdminStatsController.java} (Dòng 79--81, 114--116):} \texttt{quarter}, \texttt{threshold} và \texttt{year} không được kiểm tra khoảng giá trị (quý 1--4, ngưỡng 0--100\%). \textit{Đề xuất:} dùng Bean Validation (\texttt{@Min}, \texttt{@Max}, \texttt{@DecimalMin}, \texttt{@DecimalMax}) với \texttt{@Validated}.
+\end{itemize}
+
+\subsection{Lê Sĩ Nhật Quang}
+Trong quá trình kiểm duyệt 4 tệp mã nguồn thuộc phân công (\texttt{AdminVilleController.java}, \texttt{AdminBilletController.java}, \texttt{AdminClientController.java} và \texttt{ClasseController.java}), ngoài các lỗi nằm trong 43 tiêu chí của Check-list, bản thân tôi đã phát hiện 5 vấn đề kỹ thuật, logic nghiệp vụ và bảo mật nghiêm trọng:
+\begin{itemize}
+  \item \textbf{Lỗi không thể biên dịch mã nguồn (Compilation Error) trong \texttt{AdminVilleController.java} (Dòng 68, 75):} Tại phương thức \texttt{editVille()}, tham số đầu vào được khai báo viết hoa là \texttt{@PathVariable("id") Long ID} (dòng 68), nhưng tại nhánh \texttt{else} (dòng 75) câu lệnh lại tham chiếu đến biến viết thường chưa từng được khai báo là \texttt{id} (\texttt{"Ville not found with ID: " + id}). Cần đổi tên tham số ở dòng 68 và lời gọi hàm ở dòng 69 thành chữ thường \texttt{id} để mã nguồn có thể biên dịch.
+  \item \textbf{Lỗi logic nghiệp vụ thiếu nhánh cập nhật dữ liệu trong \texttt{AdminBilletController.java} (Dòng 75, 81):} Phương thức \texttt{saveBillet()} được dùng chung cho cả chức năng thêm mới và chỉnh sửa vé (thể hiện qua biểu thức kiểm tra \texttt{billet.getId() == null ? "Add" : "Edit"} ở dòng 75). Tuy nhiên, tại dòng 81, mã nguồn lại gọi cố định \texttt{billetService.create(billet)} cho mọi trường hợp mà không rẽ nhánh gọi \texttt{update} khi \texttt{billet.getId() != null}, dẫn đến lỗi tạo trùng bản ghi hoặc xung đột khóa chính khi cập nhật vé. Cần bổ sung câu lệnh điều kiện \texttt{if (billet.getId() == null)} để phân tách rõ thao tác tạo mới và cập nhật.
+  \item \textbf{Sử dụng sai phương thức HTTP \texttt{@GetMapping} cho thao tác xóa trong \texttt{AdminBilletController.java} (Dòng 118):} Phương thức \texttt{deleteBillet()} sử dụng \texttt{@GetMapping("/delete/\{id\}")} để thực hiện xóa bản ghi trong cơ sở dữ liệu. Việc dùng giao thức HTTP GET cho thao tác làm thay đổi dữ liệu vi phạm chuẩn REST/HTTP và gây ra lỗ hổng bảo mật CSRF hoặc làm xóa nhầm dữ liệu khi trình duyệt tải trước đường dẫn. Cần đổi sang \texttt{@DeleteMapping("/delete/\{id\}")} hoặc \texttt{@PostMapping("/delete/\{id\}")}.
+  \item \textbf{Lộ thực thể cơ sở dữ liệu (JPA Entity) và vi phạm phân tầng kiến trúc trong \texttt{AdminBilletController.java} và \texttt{AdminClientController.java}:} Tệp \texttt{AdminBilletController.java} truyền và nhận trực tiếp thực thể \texttt{Billet} qua \texttt{@ModelAttribute} và \texttt{Model} (dòng 10, 42, 52, 63, 97) thay vì dùng lớp DTO, làm lộ cấu trúc bảng dữ liệu và gây nguy cơ lỗ hổng Mass Assignment. Tương tự, \texttt{AdminClientController.java} trộn lẫn việc sử dụng \texttt{ClientDTO} (dòng 59) với thực thể \texttt{Client} (dòng 12, 161) và đặt quá nhiều logic nghiệp vụ (vòng lặp lồng nhau và gom nhóm \texttt{Map} ở dòng 63--105) trực tiếp trong tầng Controller thay vì tầng Service.
+  \item \textbf{Nguy cơ lỗi lúc chạy (\texttt{NullPointerException} và \texttt{IllegalStateException}) trong \texttt{AdminClientController.java} (Dòng 59--66, 94--97, 102--105):} Trong hàm \texttt{viewClientDetails()}, sau khi lấy \texttt{ClientDTO client = clientService.findbyIdDTO(id)} ở dòng 59, mã nguồn gọi thẳng \texttt{client.getReservations().stream()} ở dòng 64 mà không kiểm tra \texttt{client == null} hay \texttt{client.getReservations() == null}. Ngoài ra, lệnh \texttt{Collectors.toMap()} tại dòng 94 và 102 không khai báo hàm xử lý trùng khóa (\textit{mergeFunction}), sẽ gây lỗi dừng chương trình nếu danh sách có phần tử trùng ID. Cần bổ sung kiểm tra \texttt{null} và truyền tham số \texttt{(existing, replacement) -> existing} vào \texttt{Collectors.toMap()}.
+\end{itemize}
+
+\subsection{Đào Xuân Sơn}
+Ngoài các mục trong checklist định sẵn, đã phát hiện các lỗi kiến trúc và vận hành nghiêm trọng (Critical Runtime Bugs) có thể gây ảnh hưởng trực tiếp đến trải nghiệm người dùng và tính an toàn của hệ thống:
+\begin{itemize}
+  \item \textbf{Kẹt hiệu ứng mờ UI (Memory Leak / UI Lockout) trong \texttt{BookingDetailsController} (Dòng 68--70):} Tạo hiệu ứng mờ \texttt{GaussianBlur(10)} lên giao diện gốc khi mở cửa sổ phụ nhưng không có hàm gỡ bỏ (\texttt{setEffect(null)}) khi đóng cửa sổ. \textit{Giải pháp:} Đăng ký sự kiện \texttt{setOnHidden} để khôi phục lại hiệu ứng giao diện gốc.
+  \item \textbf{Xung đột dữ liệu tĩnh (Static State Contamination) trong \texttt{BookingDetailsController} (Dòng 36, 51):} Khai báo biến static (\texttt{vol}, \texttt{reservation}) dẫn đến ghi đè dữ liệu giữa các phiên làm việc hoặc các tab khác nhau. \textit{Giải pháp:} Chuyển sang biến thuộc tính đối tượng (instance field) hoặc quản lý qua State Manager.
+  \item \textbf{Treo giao diện (UI Freeze / Blocking I/O) trong \texttt{SideBarController} (Dòng 42, 45):} Gọi API đồng bộ \texttt{Client.get("/search/")} trực tiếp trên luồng giao diện chính (\texttt{Platform.runLater}). \textit{Giải pháp:} Đưa tác vụ mạng vào luồng chạy ngầm (\texttt{Task} hoặc \texttt{CompletableFuture}).
+  \item \textbf{Lỗi gửi lặp (Double Submit / Race Condition) trong \texttt{SignupController} (Dòng 29--62):} Không ngắt kích hoạt (disable) nút ``Next'' khi đang thực thi chuyển màn hình, dẫn đến nguy cơ nhấn đúp gây tạo dữ liệu trùng. \textit{Giải pháp:} Vô hiệu hóa nút bấm ngay khi bắt đầu xử lý sự kiện click.
+  \item \textbf{Lộ mật khẩu rõ dạng Text (Security Risk) trong \texttt{SignupController} (Dòng 15, 18):} Dùng ô nhập văn bản \texttt{TextField} thay vì \texttt{PasswordField} cho ô mật khẩu. \textit{Giải pháp:} Thay đổi kiểu linh kiện trên giao diện FXML sang \texttt{PasswordField}.
+\end{itemize}
+
+\subsection{Sơn Văn Phát}
+Trong quá trình kiểm duyệt 4 tệp mã nguồn thuộc phân công (\texttt{PersonalInfoController.java}, \texttt{PassengerEditorController.java}, \texttt{SearchResultsController.java}), ngoài các lỗi nằm trong 43 tiêu chí của Check-list, phát hiện 2 vấn đề kỹ thuật, logic nghiệp vụ và bảo mật nghiêm trọng:
+\begin{itemize}
+  \item \textbf{E5. Treo giao diện do I/O đồng bộ (UI Freeze) trong \texttt{PersonalInfoController.java} (dòng 73--76); \texttt{SearchResultsController.java} (dòng 33--39, 79); \texttt{Client.java} (dòng 28, 54, 92, 130):} Các handler của JavaFX gọi HTTP ngay trên luồng xử lý giao diện. Client dùng OkHttp \texttt{Call.execute()}, là lời gọi đồng bộ; trang kết quả còn gọi API lấy giá một lần cho mỗi chuyến bay. Khi mạng phản hồi chậm, giao diện có thể không phản hồi trong thời gian chờ. \textit{Giải pháp:} chuyển yêu cầu mạng sang \texttt{Task}/\texttt{Executor}, chỉ cập nhật \texttt{Node} trên JavaFX Application Thread, và vô hiệu hóa nút đăng ký lúc đang gửi. Bản Java sau sửa hiện chưa xử lý phần luồng nền.
+  \item \textbf{E6. Không phân biệt đăng ký thành công và đăng nhập thất bại trong \texttt{PersonalInfoController.java} (dòng 73--78):} Controller tạo tài khoản rồi đăng nhập bằng hai request liên tiếp trong cùng một \texttt{try/catch}. Nếu request đăng ký đã hoàn tất ở máy chủ nhưng bước đăng nhập thất bại, màn hình chỉ xử lý một lỗi chung; người dùng có thể thử đăng ký lại email đã tồn tại. \textit{Giải pháp:} tách trạng thái của hai bước. Sau khi tạo tài khoản thành công mà đăng nhập lỗi, thông báo tài khoản đã được tạo và chuyển sang màn đăng nhập. Bản Java sau sửa vẫn có một \texttt{catch} chung nên nguy cơ này còn tồn tại.
+\end{itemize}
+
+\subsection{Nhận xét chung (client)}
+\begin{itemize}
+  \item \textbf{Trạng thái \texttt{static} giữa các màn hình trong \texttt{BookingDetailsController}, \texttt{SignupController}, \texttt{PassengerEditorController}:} Dữ liệu được truyền qua field \texttt{static} (có chỗ \texttt{public static}). \textit{Đề xuất:} truyền qua instance controller (\texttt{FXMLLoader.getController()}).
+\end{itemize}
 
 % ================= 6 =================
 \section{Đề xuất chung}
