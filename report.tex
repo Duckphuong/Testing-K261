@@ -224,7 +224,7 @@ Trong quá trình kiểm duyệt 4 tệp mã nguồn thuộc phân công (\textt
 \end{itemize}
 
 \subsection{Đào Xuân Sơn}
-Ngoài các mục trong checklist định sẵn, đã phát hiện các lỗi kiến trúc và vận hành nghiêm trọng (Critical Runtime Bugs) có thể gây ảnh hưởng trực tiếp đến trải nghiệm người dùng và tính an toàn của hệ thống:
+Ngoài các mục trong checklist định sẵn, nhóm đã phát hiện các lỗi kiến trúc và vận hành nghiêm trọng (Critical Runtime Bugs) có thể gây ảnh hưởng trực tiếp đến trải nghiệm người dùng và tính an toàn của hệ thống:
 \begin{itemize}
   \item \textbf{Kẹt hiệu ứng mờ UI (Memory Leak / UI Lockout) trong \texttt{BookingDetailsController} (Dòng 68--70):} Tạo hiệu ứng mờ \texttt{GaussianBlur(10)} lên giao diện gốc khi mở cửa sổ phụ nhưng không có hàm gỡ bỏ (\texttt{setEffect(null)}) khi đóng cửa sổ. \textit{Giải pháp:} Đăng ký sự kiện \texttt{setOnHidden} để khôi phục lại hiệu ứng giao diện gốc.
   \item \textbf{Xung đột dữ liệu tĩnh (Static State Contamination) trong \texttt{BookingDetailsController} (Dòng 36, 51):} Khai báo biến static (\texttt{vol}, \texttt{reservation}) dẫn đến ghi đè dữ liệu giữa các phiên làm việc hoặc các tab khác nhau. \textit{Giải pháp:} Chuyển sang biến thuộc tính đối tượng (instance field) hoặc quản lý qua State Manager.
