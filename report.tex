@@ -1,0 +1,264 @@
+\documentclass[12pt,a4paper]{article}
+
+% ---------- Packages ----------
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage[table]{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{bkblue}{RGB}{3,43,145}
+\definecolor{codebg}{RGB}{246,248,250}
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[#1]}}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\lstset{
+  language=Java, basicstyle=\ttfamily\small, backgroundcolor=\color{codebg},
+  frame=single, rulecolor=\color{black!20}, numbers=left,
+  numberstyle=\tiny\color{gray}, keywordstyle=\color{bkblue}\bfseries,
+  commentstyle=\color{green!45!black}\itshape, stringstyle=\color{red!60!black},
+  breaklines=true, showstringspaces=false, columns=fullflexible, xleftmargin=1.5em
+}
+
+\titleformat{\section}{\Large\bfseries\color{bkblue}}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection.}{0.6em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Kiểm thử phần mềm -- Nhóm HEHE2027}
+\rhead{Bài tập lớn 1: Code Review}
+\cfoot{\thepage}
+\setlength{\headheight}{15pt}
+
+\sloppy
+\setlength{\emergencystretch}{3em}
+
+\begin{document}
+
+% ================= COVER =================
+\begin{titlepage}
+\begin{tikzpicture}[overlay,remember picture]
+\draw [line width=2.25pt]
+    ($ (current page.north west) + (2.0cm,-1.5cm) $)
+    rectangle
+    ($ (current page.south east) + (-1.5cm,2cm) $);
+\draw [line width=0.5pt]
+    ($ (current page.north west) + (2.2cm,-1.7cm) $)
+    rectangle
+    ($ (current page.south east) + (-1.7cm,2.2cm) $);
+\end{tikzpicture}
+\begin{center}
+\textbf{ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH} \\
+\textbf{TRƯỜNG ĐẠI HỌC BÁCH KHOA}\\
+\textbf{KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH}
+
+\vspace{1cm}
+\includegraphics[width=0.32\textwidth]{img/logo/logo.png}
+\vspace{1cm}
+
+\begin{tabular}{c}
+    \textbf{\Large KIỂM THỬ PHẦN MỀM (SOFTWARE TESTING)}\\[0.4cm]
+    \textbf{\large BÀI TẬP LỚN 1: SOFTWARE TECHNICAL REVIEW}\\[0.2cm]
+    \large Code review dự án \textit{BirdBook}\\[0.4cm]
+    \textbf{Học kỳ 1, năm học 2026--2027 -- Lớp L01 -- Nhóm HEHE2027}\\
+    \hline
+\end{tabular}
+
+\vspace{1cm}
+\begin{tabular}{p{3cm} p{6cm} l}
+    \textbf{GVHD:} & Trần Thị Ngọc Trâm & \\[0.2cm]
+    \textbf{Sinh viên:} & Nguyễn Đức Phương & 2312749 \\
+                        & Lê Sĩ Nhật Quang & 2312791 \\
+                        & Huỳnh Đức Tài & 2212971 \\
+                        & Đào Xuân Sơn & 2312954 \\
+                        & Sơn Văn Phát & 2212535 \\
+\end{tabular}
+
+\vfill
+\fontsize{14pt}{0pt}\selectfont TP. HỒ CHÍ MINH, THÁNG 9/2026
+\end{center}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ================= 1 =================
+\section{Giới thiệu}
+Nhóm thực hiện review kỹ thuật (\textit{technical review}) mã nguồn Java của \textit{BirdBook},
+một hệ thống đặt vé máy bay gồm \textbf{server} (Spring Boot: MVC, JPA, Security, Cache với Redis)
+và \textbf{client} (JavaFX). Việc review dựa trên \textit{Java Code Review Checklist} gồm 43 mục,
+chia thành ba nhóm: \textit{Defect} (mục 1--38), \textit{Ambiguity} (39--40) và \textit{Redundancy} (41--43).
+
+Tài liệu nộp kèm là file \texttt{HEHE2027\_L01\_Proj\#1-Code Review.xlsx}, gồm sheet \texttt{CoverPage},
+mỗi file một sheet review và sheet \texttt{All problems} tổng hợp tất cả lỗi.
+
+% ================= 2 =================
+\section{Phân công công việc}
+Mỗi file có một người review (1st-reviewer) và một người kiểm tra lại (2nd-reviewer).
+Mỗi thành viên review tối thiểu 3 file.
+
+{\small
+\begin{longtable}{|c|L{3.1cm}|L{5.4cm}|c|c|L{2.2cm}|}
+\hline
+\rowcolor{gray!15}
+\textbf{STT} & \textbf{Thành viên} & \textbf{1st-reviewer (file)} & \textbf{LoC} & \textbf{Lỗi} & \textbf{Đóng góp} \\ \hline
+\endhead
+1 & Nguyễn Đức Phương \newline 2312749 &
+  \texttt{VilleServiceImpl}, \texttt{AdminStatsController}, \texttt{UserDetailsImpl} & 329 & 28 & 20\% \\ \hline
+2 & Lê Sĩ Nhật Quang \newline 2312791 &
+  \texttt{AdminBilletController}, \texttt{AdminClientController}, \texttt{AdminVilleController} & 288 & 26 & 20\% \\ \hline
+3 & Huỳnh Đức Tài \newline 2212971 &
+  \texttt{AuthController} (server), \texttt{CategorieController}, \texttt{ReservationController}, \texttt{SearchController} & 308 & 29 & 20\% \\ \hline
+4 & Đào Xuân Sơn \newline 2312954 &
+  \texttt{BookingDetailsController}, \texttt{SignupController}, \texttt{SideBarController} & 325 & 31 & 20\% \\ \hline
+5 & Sơn Văn Phát \newline 2212535 &
+  \texttt{PersonalInfoController}, \texttt{PassengerEditorController}, \texttt{SearchResultsController} & 342 & 31 & 20\% \\ \hline
+\multicolumn{3}{|r|}{\textbf{Tổng: 16 file}} & \textbf{1592} & \textbf{145} & \textbf{100\%} \\ \hline
+\end{longtable}
+}
+
+\noindent\textbf{Phân công 2nd-reviewer (validate):}
+\begin{itemize}[noitemsep]
+  \item Nguyễn Đức Phương validate các file của Lê Sĩ Nhật Quang.
+  \item \todo{Bổ sung người validate cho các file của Phương, Tài, Sơn, Phát}
+\end{itemize}
+
+% ================= 3 =================
+\section{Quy trình review}
+\begin{enumerate}[noitemsep]
+  \item \textbf{Chuẩn bị:} mỗi thành viên đọc file được giao cùng các interface, entity, DTO và service
+        liên quan để hiểu ngữ cảnh.
+  \item \textbf{Review theo checklist:} với từng mục trong 43 mục, ghi \texttt{Yes}/\texttt{No}/\texttt{\#NA} vào cột
+        \textit{YES/NO/\#N/A}. Cột \textit{Objective} chứa đáp án mong đợi; cột \textit{Pass?} tự so khớp hai cột
+        và ra \texttt{No} khi mục đó có lỗi. Với mỗi lỗi, ghi số dòng, mô tả và đề xuất sửa.
+        \texttt{\#NA} dùng cho mục không áp dụng (ví dụ file không có vòng lặp hay \texttt{switch}).
+  \item \textbf{Kiểm chứng:} 2nd-reviewer đối chiếu từng lỗi với mã nguồn để loại lỗi ``giả''.
+  \item \textbf{Tổng hợp:} chép lỗi sang sheet \texttt{All problems}; các lỗi nghiêm trọng nằm ngoài checklist
+        được đưa vào Mục~5 (Extra).
+\end{enumerate}
+
+% ================= 4 =================
+\section{Kết quả review}
+
+\subsection{Tổng quan}
+Nhóm review \textbf{16 file (1592 LoC)} và ghi nhận \textbf{145 lỗi}. Các mục checklist bị vi phạm nhiều nhất:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|c|L{8.8cm}|c|}
+\hline
+\rowcolor{gray!15}\textbf{Mục} & \textbf{Nội dung} & \textbf{Số file vi phạm} \\ \hline
+28, 30, 32 & Thiếu header comment / comment cho biến / comment nói chung & 16 / 16 / 16 \\ \hline
+26 & Xử lý exception không phù hợp & 10 \\ \hline
+34 & Định dạng, thụt lề không nhất quán & 10 \\ \hline
+1, 40 & Tên biến không rõ nghĩa, sai quy ước & 9 / 8 \\ \hline
+41, 43 & Biến thừa / code lặp lại & 8 / 8 \\ \hline
+4 & Giá trị nên là hằng số & 7 \\ \hline
+36 & Tính toán lại giá trị nhiều lần & 6 \\ \hline
+\end{tabular}
+\caption{Các mục checklist vi phạm nhiều nhất}
+\end{table}
+
+Nhận xét chung: hầu như toàn bộ mã nguồn \textbf{không có comment}; exception thường bị ``nuốt''
+(\texttt{catch} rỗng hoặc chỉ \texttt{printStackTrace()}); tên biến viết tắt (\texttt{vr}, \texttt{clt}, \texttt{ss}, \texttt{vd}).
+Ngoài ra có một số lỗi làm chương trình \textbf{không biên dịch được} hoặc \textbf{chạy sai}, trình bày dưới đây.
+
+\subsection{Các lỗi nghiêm trọng tiêu biểu}
+
+{\footnotesize
+\begin{longtable}{|L{3.1cm}|c|L{6.3cm}|L{4.0cm}|}
+\hline
+\rowcolor{gray!15}\textbf{File (dòng)} & \textbf{Mục} & \textbf{Lỗi} & \textbf{Đề xuất} \\ \hline
+\endhead
+\texttt{PassengerEditor\-Controller} (49) & 16 & \texttt{if (mode = Mode.CREATE)} là phép gán, không phải so sánh, nên file \textbf{không biên dịch được}. & \texttt{mode == Mode.CREATE} \\ \hline
+\texttt{AdminVille\-Controller} (68, 75) & 39 & Tham số tên \texttt{ID} nhưng code dùng \texttt{id}, nên \textbf{lỗi biên dịch}. & Thống nhất dùng \texttt{id}. \\ \hline
+\texttt{AdminStats\-Controller} (87--90) & 15, 13 & \texttt{100 / totalSeats} với \texttt{totalSeats = 0} gây \texttt{ArithmeticException} ở \textbf{mọi} request \texttt{/plane-occupancy}; phép chia \texttt{int/int} còn làm mất phần thập phân. & Xoá code thử; lấy tỉ lệ từ \texttt{PlaneOccupancyStatsDTO}. \\ \hline
+\texttt{AdminStats\-Controller} (124) & 17 & \texttt{year!=null \&\& threshold!=null || quarter!=null}: chỉ cần có \texttt{quarter} là service bị gọi với \texttt{year = null}. & \texttt{year != null \&\& threshold != null} \\ \hline
+\texttt{AuthController} server (52) & 17 & \texttt{authentication == null \&} \texttt{authentication.\allowbreak isAuthenticated()}: toán tử \texttt{\&} vẫn tính vế phải, nên gây \texttt{NullPointerException} khi \texttt{authentication} là \texttt{null}. & Dùng toán tử ngắn mạch \texttt{\&\&}/\texttt{||} và sửa lại điều kiện. \\ \hline
+\texttt{AuthController} server (72) & 25 & Method có kiểu trả về \texttt{ResponseEntity<ClientDTO>} nhưng thiếu lệnh \texttt{return}. & Trả về kết quả của \texttt{register()}. \\ \hline
+\texttt{Reservation\-Controller} (45) & 17 & Dùng \texttt{|} thay vì \texttt{||}. & Dùng \texttt{||}. \\ \hline
+\texttt{PersonalInfo\-Controller} (68--69) & 27 & \texttt{setPrenom(getNom())} gán họ vào tên; \texttt{setPassword(fName.getText())} ghi đè mật khẩu người dùng đã nhập. & Gán tên bằng \texttt{fName.\allowbreak getText()}; bỏ lệnh \texttt{setPassword}. \\ \hline
+\texttt{PersonalInfo\-}, \texttt{PassengerEditor\-Controller} & 26 & \texttt{DatePicker.getValue().toString()} khi chưa chọn ngày gây \texttt{NullPointerException}. & Kiểm tra ngày trước khi gửi. \\ \hline
+\texttt{SideBar\-Controller} (48--61) & 11 & Gọi \texttt{searches.get(0..2)} mà không kiểm tra kích thước danh sách; lỗi bị \texttt{catch} rỗng che đi. & Kiểm tra \texttt{size()} trước khi truy cập. \\ \hline
+\texttt{SearchResults\-Controller} (27, 115--123) & 41, 27 & \texttt{departureDate} được gán nhưng không bao giờ dùng, nên kết quả không lọc theo ngày; \texttt{loadFlightInfo(null)} truyền id \texttt{null}. & Áp dụng ngày vào truy vấn; truyền id chuyến bay đã chọn. \\ \hline
+\texttt{VilleServiceImpl} (86--93) & 26 & \texttt{findById} trả về \texttt{null} thay vì ném \texttt{NotFoundException}; kiểm tra \texttt{Optional != null} luôn đúng. & \texttt{orElseThrow(...)} \\ \hline
+\end{longtable}
+}
+
+% ================= 5 =================
+\section{Extra: lỗi nghiêm trọng ngoài checklist}
+
+\paragraph{E1. Cache không hoạt động do gọi method trong cùng class (VilleServiceImpl, dòng 98, 107, 115).}
+Spring xử lý \texttt{@CachePut}/\texttt{@CacheEvict} thông qua proxy, nên lời gọi \texttt{this.deleteById()} hay
+\texttt{this.updateDTO()} từ bên trong class sẽ \textbf{bỏ qua cache}. Hậu quả: sau \texttt{delete(ville)},
+\texttt{findDTOById(id)} vẫn trả về thành phố đã bị xoá. \textit{Đề xuất:} đặt annotation cache trực tiếp trên
+\texttt{delete()}/\texttt{update()}, hoặc gọi qua bean được inject.
+
+\paragraph{E2. Mã nguồn không biên dịch được.}
+Khi biên dịch thử phần server, nhóm phát hiện: \texttt{AdminPassagerController.java} thiếu dấu \texttt{\}} cuối file;
+một số file import sai tên package \texttt{jakarta.valIDation} và \texttt{org.springframework.valIDation} (đúng phải là
+\texttt{validation}, có vẻ do thay thế hàng loạt ``id'' thành ``ID''). Cùng với hai lỗi biên dịch ở Mục 4.2, dự án hiện
+\textbf{không build được}. \textit{Đề xuất:} bật build trên CI (Maven/Gradle) để chặn các commit không biên dịch được.
+
+\paragraph{E3. Không kiểm tra dữ liệu đầu vào (AdminStatsController).}
+\texttt{quarter}, \texttt{threshold} và \texttt{year} không được kiểm tra khoảng giá trị (quý 1--4, ngưỡng 0--100\%).
+\textit{Đề xuất:} dùng Bean Validation (\texttt{@Min}, \texttt{@Max}, \texttt{@DecimalMin}, \texttt{@DecimalMax}) với \texttt{@Validated}.
+
+\paragraph{E4. Trạng thái \texttt{static} dùng chung giữa các màn hình (client).}
+\texttt{BookingDetailsController}, \texttt{SignupController} và \texttt{PassengerEditorController} truyền dữ liệu giữa
+các màn hình qua field \texttt{static} (có chỗ còn là \texttt{public static}), nên dễ bị dữ liệu cũ hoặc lẫn dữ liệu khi
+mở nhiều cửa sổ. \textit{Đề xuất:} truyền dữ liệu qua instance controller (\texttt{FXMLLoader.getController()}).
+
+% ================= 6 =================
+\section{Đề xuất chung}
+\begin{enumerate}[noitemsep]
+  \item Bắt buộc code phải \textbf{build thành công} và qua code review trước khi merge; xoá code thử (\texttt{//just try}, \texttt{System.out.println}).
+  \item Thống nhất cách xử lý lỗi: service ném exception, \texttt{GlobalExceptionHandler} xử lý; client hiển thị thông báo thay vì \texttt{catch} rỗng.
+  \item Validate dữ liệu đầu vào ở cả client (form) và server (Bean Validation).
+  \item Dùng công cụ phân tích tĩnh (SonarLint, SpotBugs, Checkstyle) để tự động bắt lỗi quy ước đặt tên, biến thừa, chia cho 0, dùng \texttt{\&}/\texttt{|} thay cho \texttt{\&\&}/\texttt{||}.
+  \item Bổ sung Javadoc cho các lớp public và thống nhất định dạng code (formatter chung của IDE).
+\end{enumerate}
+
+% ================= 7 =================
+\section{AI Usage Declaration}
+
+\subsection{Nguyễn Đức Phương}
+\textbf{Công cụ:} Claude (Anthropic), dùng qua ứng dụng Claude Code (model Claude Opus 5.5).
+
+\noindent\textbf{Prompt đã sử dụng} (nguyên văn):
+\begin{enumerate}[noitemsep]
+  \item ``hãy mô tả lại đề bài''
+  \item ``giải thích ý nghĩa của 3 file này''
+  \item ``giải thích các lỗi ở từng file, tại sao lại lỗi''
+  \item ``ở file đầu tiên mục comment thì tất cả phải là no hết chứ nhỉ, vì đấu có cmt nào đâu''
+  \item ``ở sheet all problem, hãy copy các giá trị từ 3 file đã review qua tương ứng với ví dụ cho toi''
+  \item ``liệt kê những thay đổi của từng file''
+\end{enumerate}
+
+\noindent\textbf{Kết quả, nhận xét và đề xuất của AI:}
+\begin{itemize}[noitemsep]
+  \item Tóm tắt đề bài.
+  \item Review 3 file, đưa ra 28 lỗi theo checklist cùng các lỗi Extra E1 và E3, kèm đề xuất sửa; giải thích nguyên nhân từng lỗi.
+  \item Viết script Python điền kết quả vào template Excel; viết phiên bản code đã sửa của 3 file.
+\end{itemize}
+
+\subsection{Các thành viên khác}
+\todo{Lê Sĩ Nhật Quang, Huỳnh Đức Tài, Đào Xuân Sơn, Sơn Văn Phát: mỗi người ghi công cụ AI, prompt và kết quả;
+nếu không dùng AI, ghi: ``We hereby confirm that no AI assistance was used in this work.''}
+
+\end{document}
