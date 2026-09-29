@@ -120,14 +120,14 @@ Mỗi thành viên review tối thiểu 3 file.
 1 & Nguyễn Đức Phương \newline 2312749 &
   \texttt{VilleServiceImpl}, \texttt{AdminStatsController}, \texttt{UserDetailsImpl} & 329 & 28 & 20\% \\ \hline
 2 & Lê Sĩ Nhật Quang \newline 2312791 &
-  \texttt{AdminBilletController}, \texttt{AdminClientController}, \texttt{AdminVilleController} & 288 & 26 & 20\% \\ \hline
+  \texttt{AdminBilletController}, \texttt{AdminClientController}, \texttt{AdminVilleController}, \texttt{ClasseController} & 321 & 31 & 20\% \\ \hline
 3 & Huỳnh Đức Tài \newline 2212971 &
   \texttt{AuthController} (server), \texttt{CategorieController}, \texttt{ReservationController}, \texttt{SearchController} & 308 & 29 & 20\% \\ \hline
 4 & Đào Xuân Sơn \newline 2312954 &
   \texttt{BookingDetailsController}, \texttt{SignupController}, \texttt{SideBarController} & 325 & 31 & 20\% \\ \hline
 5 & Sơn Văn Phát \newline 2212535 &
   \texttt{PersonalInfoController}, \texttt{PassengerEditorController}, \texttt{SearchResultsController} & 342 & 31 & 20\% \\ \hline
-\multicolumn{3}{|r|}{\textbf{Tổng: 16 file}} & \textbf{1592} & \textbf{145} & \textbf{100\%} \\ \hline
+\multicolumn{3}{|r|}{\textbf{Tổng: 17 file}} & \textbf{1625} & \textbf{150} & \textbf{100\%} \\ \hline
 \end{longtable}
 }
 
@@ -155,7 +155,7 @@ Mỗi thành viên review tối thiểu 3 file.
 \section{Kết quả review}
 
 \subsection{Tổng quan}
-Nhóm review \textbf{16 file (1592 LoC)} và ghi nhận \textbf{145 lỗi}. Các mục checklist bị vi phạm nhiều nhất:
+Nhóm review \textbf{17 file (1625 LoC)} và ghi nhận \textbf{150 lỗi}. Các mục checklist bị vi phạm nhiều nhất:
 
 \begin{table}[H]
 \centering
@@ -163,8 +163,8 @@ Nhóm review \textbf{16 file (1592 LoC)} và ghi nhận \textbf{145 lỗi}. Các
 \begin{tabular}{|c|L{8.8cm}|c|}
 \hline
 \rowcolor{gray!15}\textbf{Mục} & \textbf{Nội dung} & \textbf{Số file vi phạm} \\ \hline
-28, 30, 32 & Thiếu header comment / comment cho biến / comment nói chung & 16 / 16 / 16 \\ \hline
-26 & Xử lý exception không phù hợp & 10 \\ \hline
+28, 30, 32 & Thiếu header comment / comment cho biến / comment nói chung & 17 / 17 / 17 \\ \hline
+26 & Xử lý exception không phù hợp & 11 \\ \hline
 34 & Định dạng, thụt lề không nhất quán & 10 \\ \hline
 1, 40 & Tên biến không rõ nghĩa, sai quy ước & 9 / 8 \\ \hline
 41, 43 & Biến thừa / code lặp lại & 8 / 8 \\ \hline
@@ -219,10 +219,31 @@ một số file import sai tên package \texttt{jakarta.valIDation} và \texttt{
 \texttt{quarter}, \texttt{threshold} và \texttt{year} không được kiểm tra khoảng giá trị (quý 1--4, ngưỡng 0--100\%).
 \textit{Đề xuất:} dùng Bean Validation (\texttt{@Min}, \texttt{@Max}, \texttt{@DecimalMin}, \texttt{@DecimalMax}) với \texttt{@Validated}.
 
-\paragraph{E4. Trạng thái \texttt{static} dùng chung giữa các màn hình (client).}
-\texttt{BookingDetailsController}, \texttt{SignupController} và \texttt{PassengerEditorController} truyền dữ liệu giữa
-các màn hình qua field \texttt{static} (có chỗ còn là \texttt{public static}), nên dễ bị dữ liệu cũ hoặc lẫn dữ liệu khi
-mở nhiều cửa sổ. \textit{Đề xuất:} truyền dữ liệu qua instance controller (\texttt{FXMLLoader.getController()}).
+\subsection*{Các lỗi Extra theo từng thành viên}
+
+{\footnotesize
+\begin{longtable}{|L{3.4cm}|L{3.2cm}|L{7.6cm}|}
+\hline
+\rowcolor{gray!15}\textbf{File (dòng)} & \textbf{Loại lỗi} & \textbf{Tác động và đề xuất} \\ \hline
+\endhead
+\multicolumn{3}{|l|}{\textbf{Lê Sĩ Nhật Quang}} \\ \hline
+\texttt{AdminBillet\-Controller} (75, 81) & Thiếu nhánh cập nhật & \texttt{saveBillet()} dùng cho cả thêm và sửa vé nhưng luôn gọi \texttt{billetService.create(billet)}, nên khi sửa sẽ tạo trùng bản ghi hoặc xung đột khoá chính. \textit{Đề xuất:} gọi \texttt{create} khi \texttt{billet.getId() == null}, ngược lại gọi \texttt{update}. \\ \hline
+\texttt{AdminBillet\-Controller} (118) & Dùng GET để xoá & \texttt{@GetMapping("/delete/\{id\}")} làm thay đổi dữ liệu qua GET: vi phạm chuẩn HTTP, dễ bị CSRF hoặc bị xoá nhầm khi trình duyệt tải trước link. \textit{Đề xuất:} \texttt{@PostMapping} hoặc \texttt{@DeleteMapping}. \\ \hline
+\texttt{AdminBillet\-}, \texttt{AdminClient\-Controller} & Lộ entity JPA, sai phân tầng & Nhận và trả thẳng entity \texttt{Billet}/\texttt{Client} qua \texttt{@ModelAttribute}, có nguy cơ Mass Assignment; logic gom nhóm dữ liệu (dòng 63--105) nằm trong controller. \textit{Đề xuất:} dùng DTO, chuyển logic xuống tầng Service. \\ \hline
+\texttt{AdminClient\-Controller} (59--105) & NPE, \texttt{IllegalState\-Exception} & Gọi \texttt{client.getReservations().stream()} mà không kiểm tra \texttt{null}; \texttt{Collectors.toMap()} không có hàm gộp nên lỗi khi trùng khoá. \textit{Đề xuất:} kiểm tra \texttt{null}, thêm hàm gộp \texttt{(a, b) -> a}. \\ \hline
+\multicolumn{3}{|l|}{\textbf{Đào Xuân Sơn}} \\ \hline
+\texttt{SideBarController} (42, 45) & Treo giao diện & Gọi API đồng bộ \texttt{Client.get("/search/")} ngay trong \texttt{Platform.runLater}, tức trên luồng giao diện. \textit{Đề xuất:} chạy trong \texttt{Task} hoặc \texttt{CompletableFuture}. \\ \hline
+\texttt{BookingDetails\-Controller} (36, 51) & Dữ liệu \texttt{static} dùng chung & \texttt{vol}, \texttt{reservation} là field \texttt{static}, dễ bị ghi đè giữa các cửa sổ. \textit{Đề xuất:} dùng field của instance. \\ \hline
+\texttt{BookingDetails\-Controller} (64--68) & Giao diện bị mờ vĩnh viễn & Hiệu ứng mờ chỉ được gỡ khi bấm nút Close của cửa sổ phụ (\texttt{PassengersInfoController}); đóng bằng cách khác (ví dụ Alt+F4) thì giao diện chính bị mờ mãi. \textit{Đề xuất:} gỡ hiệu ứng trong \texttt{setOnHidden}. \\ \hline
+\texttt{SignupController} (29--62) & Gửi lặp & Nút ``Next'' không bị vô hiệu hoá khi đang xử lý, nhấn đúp có thể tạo dữ liệu trùng. \textit{Đề xuất:} disable nút khi bắt đầu xử lý. \\ \hline
+\texttt{SignupController} (15, 18) & Lộ mật khẩu & Ô mật khẩu khai báo là \texttt{TextField} nên hiển thị rõ. \textit{Đề xuất:} dùng \texttt{PasswordField}. \\ \hline
+\multicolumn{3}{|l|}{\textbf{Sơn Văn Phát}} \\ \hline
+\texttt{PersonalInfo\-Controller} (73--76), \texttt{SearchResults\-Controller} (33--39, 79), \texttt{Client} (28, 54, 92, 130) & Treo giao diện do I/O đồng bộ & Các handler JavaFX gọi HTTP bằng OkHttp \texttt{execute()} (đồng bộ) trên luồng giao diện; trang kết quả còn gọi API giá cho từng chuyến bay. \textit{Đề xuất:} chạy request trong \texttt{Task}/\texttt{Executor}, chỉ cập nhật giao diện trên JavaFX Application Thread, disable nút khi đang gửi. \\ \hline
+\texttt{PersonalInfo\-Controller} (73--78) & Không tách đăng ký và đăng nhập & Đăng ký rồi đăng nhập trong cùng một \texttt{try/catch}: nếu đăng ký thành công nhưng đăng nhập lỗi, người dùng chỉ thấy lỗi chung và có thể đăng ký lại email đã tồn tại. \textit{Đề xuất:} xử lý riêng hai bước; báo tài khoản đã tạo và chuyển sang màn đăng nhập. \\ \hline
+\multicolumn{3}{|l|}{\textbf{Nhận xét chung (client)}} \\ \hline
+\texttt{BookingDetails\-}, \texttt{Signup\-}, \texttt{PassengerEditor\-Controller} & Trạng thái \texttt{static} giữa các màn hình & Dữ liệu được truyền qua field \texttt{static} (có chỗ \texttt{public static}). \textit{Đề xuất:} truyền qua instance controller (\texttt{FXMLLoader.getController()}). \\ \hline
+\end{longtable}
+}
 
 % ================= 6 =================
 \section{Đề xuất chung}
@@ -257,8 +278,48 @@ mở nhiều cửa sổ. \textit{Đề xuất:} truyền dữ liệu qua instanc
   \item Viết script Python điền kết quả vào template Excel; viết phiên bản code đã sửa của 3 file.
 \end{itemize}
 
-\subsection{Các thành viên khác}
-\todo{Lê Sĩ Nhật Quang, Huỳnh Đức Tài, Đào Xuân Sơn, Sơn Văn Phát: mỗi người ghi công cụ AI, prompt và kết quả;
-nếu không dùng AI, ghi: ``We hereby confirm that no AI assistance was used in this work.''}
+\subsection{Lê Sĩ Nhật Quang}
+\textbf{Công cụ:} Google Gemini (bản miễn phí trên Gemini Web và tiện ích tích hợp trong Google Sheets).
+
+\noindent\textbf{Prompt đã sử dụng:}
+\begin{enumerate}[noitemsep]
+  \item ``Hướng dẫn thực hiện bài tập lớn môn kiểm tra phần mềm với các file được cung cấp bằng gemini trong google sheet'' (đính kèm \texttt{Code Review Report Template.xlsx} và \texttt{Project \#1 description.pdf}).
+\end{enumerate}
+
+\noindent\textbf{Kết quả, nhận xét và đề xuất của AI} (đã được kiểm tra lại trên mã nguồn):
+\begin{itemize}[noitemsep]
+  \item \texttt{AdminVilleController} (89 LoC, đạt 32/43): 11 vi phạm, gồm tên \texttt{vs}, \texttt{vd}, \texttt{ID}/\texttt{id} gây lỗi biên dịch (mục 1, 39, 40), chuỗi lặp (4), tên method \texttt{AddVilles} (8), bắt \texttt{Exception} chung (26), thiếu comment (28, 30, 32), tính lại và lặp code trong \texttt{saveVille()} (36, 43).
+  \item \texttt{AdminBilletController} (94 LoC, đạt 35/43): 8 vi phạm, gồm tham số \texttt{ID} (1, 40), chuỗi lặp (4), thiếu hoặc sai xử lý exception (26), thiếu comment (28, 30, 32), lặp khối nạp dữ liệu vào \texttt{Model} (43); cùng các lỗi thiếu nhánh update, dùng GET để xoá, lộ entity.
+  \item \texttt{AdminClientController} (105 LoC, đạt 36/43): 7 vi phạm, gồm chuỗi lặp (4), xử lý exception (26), thiếu comment (28, 30, 32), method \texttt{viewClientDetails()} dài 75 dòng (35), lặp \texttt{Collectors.toMap} (43); cảnh báo NPE ở dòng 64.
+  \item \texttt{ClasseController} (33 LoC, đạt 38/43): 5 vi phạm, gồm tên method \texttt{getClasses(Long id)} ở dạng số nhiều dù trả về một đối tượng (8), không xử lý \texttt{null} khi tìm theo id (26), thiếu comment (28, 30, 32).
+  \item Đề xuất chung của AI: đổi tên theo camelCase, tách chuỗi lặp thành hằng \texttt{private static final}, dùng Logger thay \texttt{System.err}, tách method phụ trợ, trả về HTTP 404 khi không tìm thấy, bổ sung Javadoc.
+\end{itemize}
+
+\subsection{Đào Xuân Sơn}
+\textbf{Công cụ:} Google Gemini 3 Flash.
+
+\noindent\textbf{Prompt đã sử dụng:}
+\begin{enumerate}[noitemsep]
+  \item ``Rà soát mã nguồn các file JavaFX Controller BookingDetailsController, SideBarController và SignupController để tìm các lỗi nghiêm trọng về luồng xử lý giao diện (UI Freeze), bộ nhớ (Memory Leak), và xung đột biến static.''
+  \item ``Đối soát chi tiết mã nguồn Java thực tế với các mục kiểm tra trong tệp báo cáo Code Review Checklist Excel TMA để chỉ ra các điểm đánh giá chưa chính xác.''
+\end{enumerate}
+
+\noindent\textbf{Kết quả, nhận xét và đề xuất của AI:} phát hiện giao diện bị mờ khi mở cửa sổ phụ, lời gọi HTTP đồng bộ gây treo luồng giao diện trong \texttt{Platform.runLater}, và biến \texttt{static} bị ghi đè giữa các cửa sổ. Các gợi ý đã được đối chiếu thủ công với mã nguồn trước khi đưa vào báo cáo.
+
+\subsection{Sơn Văn Phát}
+\textbf{Công cụ:} Google Gemini 3.8 Flash.
+
+\noindent\textbf{Prompt đã sử dụng:}
+\begin{enumerate}[noitemsep]
+  \item ``Rà soát mã nguồn các file JavaFX Controller PersonalInfoController, PassengerEditorController và SearchResultsController để tìm các lỗi liên quan đến ràng buộc/kiểm tra dữ liệu người dùng (Input Validation), xử lý ngoại lệ (Exception Handling), và nguy cơ rò rỉ bộ nhớ hoặc xung đột dữ liệu phiên người dùng (Session Data).''
+  \item ``Đối soát chi tiết mã nguồn Java thực tế của các màn hình quản lý hành khách và hiển thị kết quả tìm kiếm với các tiêu chí trong Code Review Checklist để xác định các vi phạm quy chuẩn đặt tên, Clean Code và logic cập nhật giao diện không an toàn trên luồng JavaFX.''
+  \item ``Đánh giá phương thức nạp dữ liệu chuyến bay trong SearchResultsController theo tiêu chuẩn Clean Code: nhận diện code smell về duplicate styling, vi phạm giới hạn dòng lệnh (method length) và tư vấn cách tách nhỏ các helper methods.''
+  \item ``Đề xuất phương án xử lý ngoại lệ (Exception Handling) chuẩn cho các luồng I/O bất đồng bộ và kiểm tra null-safety trên các trường nhập liệu giao diện (DatePicker, TextField) trước khi đóng gói thành DTO gửi lên Server.''
+\end{enumerate}
+
+\noindent\textbf{Kết quả, nhận xét và đề xuất của AI:} phát hiện thiếu kiểm tra định dạng email và số điện thoại trước khi lưu thông tin cá nhân, lỗi nuốt ngoại lệ (\texttt{catch} rỗng) khi truy vấn kết quả tìm kiếm, và nguy cơ không giải phóng listener trên bảng danh sách hành khách. Các gợi ý đã được đối chiếu thủ công với mã nguồn trước khi đưa vào báo cáo.
+
+\subsection{Huỳnh Đức Tài}
+We hereby confirm that no AI assistance was used in this work.
 
 \end{document}
