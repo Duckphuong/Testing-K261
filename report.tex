@@ -202,30 +202,17 @@ Ngoài ra có một số lỗi làm chương trình \textbf{không biên dịch 
 
 % ================= 5 =================
 \section{Extra: lỗi nghiêm trọng ngoài checklist}
-
-\paragraph{E1. Cache không hoạt động do gọi method trong cùng class (VilleServiceImpl, dòng 98, 107, 115).}
-Spring xử lý \texttt{@CachePut}/\texttt{@CacheEvict} thông qua proxy, nên lời gọi \texttt{this.deleteById()} hay
-\texttt{this.updateDTO()} từ bên trong class sẽ \textbf{bỏ qua cache}. Hậu quả: sau \texttt{delete(ville)},
-\texttt{findDTOById(id)} vẫn trả về thành phố đã bị xoá. \textit{Đề xuất:} đặt annotation cache trực tiếp trên
-\texttt{delete()}/\texttt{update()}, hoặc gọi qua bean được inject.
-
-\paragraph{E2. Mã nguồn không biên dịch được.}
-Khi biên dịch thử phần server, nhóm phát hiện: \texttt{AdminPassagerController.java} thiếu dấu \texttt{\}} cuối file;
-một số file import sai tên package \texttt{jakarta.valIDation} và \texttt{org.springframework.valIDation} (đúng phải là
-\texttt{validation}, có vẻ do thay thế hàng loạt ``id'' thành ``ID''). Cùng với hai lỗi biên dịch ở Mục 4.2, dự án hiện
-\textbf{không build được}. \textit{Đề xuất:} bật build trên CI (Maven/Gradle) để chặn các commit không biên dịch được.
-
-\paragraph{E3. Không kiểm tra dữ liệu đầu vào (AdminStatsController).}
-\texttt{quarter}, \texttt{threshold} và \texttt{year} không được kiểm tra khoảng giá trị (quý 1--4, ngưỡng 0--100\%).
-\textit{Đề xuất:} dùng Bean Validation (\texttt{@Min}, \texttt{@Max}, \texttt{@DecimalMin}, \texttt{@DecimalMax}) với \texttt{@Validated}.
-
-\subsection*{Các lỗi Extra theo từng thành viên}
+Các lỗi nghiêm trọng không thuộc 43 mục checklist, nhóm theo thành viên phát hiện:
 
 {\footnotesize
 \begin{longtable}{|L{3.4cm}|L{3.2cm}|L{7.6cm}|}
 \hline
 \rowcolor{gray!15}\textbf{File (dòng)} & \textbf{Loại lỗi} & \textbf{Tác động và đề xuất} \\ \hline
 \endhead
+\multicolumn{3}{|l|}{\textbf{Nguyễn Đức Phương}} \\ \hline
+\texttt{VilleService\-Impl} (98, 107, 115) & Cache không hoạt động do gọi method trong cùng class & Spring xử lý \texttt{@CachePut}/\texttt{@CacheEvict} thông qua proxy, nên lời gọi \texttt{this.deleteById()} hay \texttt{this.updateDTO()} từ bên trong class sẽ bỏ qua cache. Hậu quả: sau \texttt{delete(ville)}, \texttt{findDTOById(id)} vẫn trả về thành phố đã bị xoá. \textit{Đề xuất:} đặt annotation cache trực tiếp trên \texttt{delete()}/\texttt{update()}, hoặc gọi qua bean được inject. \\ \hline
+\texttt{AdminPassager\-Controller} và các file import \texttt{valIDation} & Mã nguồn không biên dịch được & Khi biên dịch thử phần server: \texttt{AdminPassagerController.java} thiếu dấu \texttt{\}} cuối file; một số file import sai tên package \texttt{jakarta.valIDation} và \texttt{org.springframework.valIDation} (đúng là \texttt{validation}, có vẻ do thay thế hàng loạt ``id'' thành ``ID''). Cùng với hai lỗi biên dịch ở Mục 4.2, dự án hiện không build được. \textit{Đề xuất:} bật build trên CI (Maven/Gradle) để chặn các commit không biên dịch được. \\ \hline
+\texttt{AdminStats\-Controller} (79--81, 114--116) & Không kiểm tra dữ liệu đầu vào & \texttt{quarter}, \texttt{threshold} và \texttt{year} không được kiểm tra khoảng giá trị (quý 1--4, ngưỡng 0--100\%). \textit{Đề xuất:} dùng Bean Validation (\texttt{@Min}, \texttt{@Max}, \texttt{@DecimalMin}, \texttt{@DecimalMax}) với \texttt{@Validated}. \\ \hline
 \multicolumn{3}{|l|}{\textbf{Lê Sĩ Nhật Quang}} \\ \hline
 \texttt{AdminBillet\-Controller} (75, 81) & Thiếu nhánh cập nhật & \texttt{saveBillet()} dùng cho cả thêm và sửa vé nhưng luôn gọi \texttt{billetService.create(billet)}, nên khi sửa sẽ tạo trùng bản ghi hoặc xung đột khoá chính. \textit{Đề xuất:} gọi \texttt{create} khi \texttt{billet.getId() == null}, ngược lại gọi \texttt{update}. \\ \hline
 \texttt{AdminBillet\-Controller} (118) & Dùng GET để xoá & \texttt{@GetMapping("/delete/\{id\}")} làm thay đổi dữ liệu qua GET: vi phạm chuẩn HTTP, dễ bị CSRF hoặc bị xoá nhầm khi trình duyệt tải trước link. \textit{Đề xuất:} \texttt{@PostMapping} hoặc \texttt{@DeleteMapping}. \\ \hline
@@ -274,7 +261,7 @@ một số file import sai tên package \texttt{jakarta.valIDation} và \texttt{
 \noindent\textbf{Kết quả, nhận xét và đề xuất của AI:}
 \begin{itemize}[noitemsep]
   \item Tóm tắt đề bài.
-  \item Review 3 file, đưa ra 28 lỗi theo checklist cùng các lỗi Extra E1 và E3, kèm đề xuất sửa; giải thích nguyên nhân từng lỗi.
+  \item Review 3 file, đưa ra 28 lỗi theo checklist cùng các lỗi Extra (cache bị bỏ qua, thiếu kiểm tra đầu vào), kèm đề xuất sửa; giải thích nguyên nhân từng lỗi.
   \item Viết script Python điền kết quả vào template Excel; viết phiên bản code đã sửa của 3 file.
 \end{itemize}
 
