@@ -39,7 +39,7 @@
 
 \pagestyle{fancy}
 \fancyhf{}
-\lhead{Kiểm thử phần mềm -- Nhóm HEHE2027}
+\lhead{Kiểm tra phần mềm -- Nhóm HEHE2027}
 \rhead{Bài tập lớn 1: Code Review}
 \cfoot{\thepage}
 \setlength{\headheight}{15pt}
@@ -71,7 +71,7 @@
 \vspace{1cm}
 
 \begin{tabular}{c}
-    \textbf{\Large KIỂM THỬ PHẦN MỀM (SOFTWARE TESTING)}\\[0.4cm]
+    \textbf{\Large KIỂM TRA PHẦN MỀM (SOFTWARE TESTING)}\\[0.4cm]
     \textbf{\large BÀI TẬP LỚN 1: SOFTWARE TECHNICAL REVIEW}\\[0.2cm]
     \large Code review dự án \textit{BirdBook}\\[0.4cm]
     \textbf{Học kỳ 1, năm học 2026--2027 -- Lớp L01 -- Nhóm HEHE2027}\\
@@ -199,7 +199,7 @@ Ngoài ra có một số lỗi làm chương trình \textbf{không biên dịch 
 \texttt{PersonalInfo\-}, \texttt{PassengerEditor\-Controller} & 26 & \texttt{DatePicker.getValue().toString()} khi chưa chọn ngày gây \texttt{NullPointerException}. & Kiểm tra ngày trước khi gửi. \\ \hline
 \texttt{SideBar\-Controller} (48--61) & 11 & Gọi \texttt{searches.get(0..2)} mà không kiểm tra kích thước danh sách; lỗi bị \texttt{catch} rỗng che đi. & Kiểm tra \texttt{size()} trước khi truy cập. \\ \hline
 \texttt{SearchResults\-Controller} (27, 115--123) & 41, 27 & \texttt{departureDate} được gán nhưng không bao giờ dùng, nên kết quả không lọc theo ngày; \texttt{loadFlightInfo(null)} truyền id \texttt{null}. & Áp dụng ngày vào truy vấn; truyền id chuyến bay đã chọn. \\ \hline
-\texttt{VilleServiceImpl} (86--93) & 26 & \texttt{findById} trả về \texttt{null} thay vì ném \texttt{NotFoundException}; kiểm tra \texttt{Optional != null} luôn đúng. & \texttt{orElseThrow(...)} \\ \hline
+\texttt{VilleServiceImpl} (86--93) & 26 & \texttt{findById} trả về \texttt{null} thay vì ném \texttt{NotFoundException}; kiểm tra \texttt{Optional != null} luôn đúng. & \texttt{dùng orElseThrow(...)} \\ \hline
 \end{longtable}
 }
 
@@ -207,14 +207,14 @@ Ngoài ra có một số lỗi làm chương trình \textbf{không biên dịch 
 \section{Extra: lỗi nghiêm trọng ngoài checklist}
 
 \subsection{Nguyễn Đức Phương}
-Trong quá trình review 3 tệp mã nguồn thuộc phân công (\texttt{VilleServiceImpl.java}, \texttt{AdminStatsController.java}, \texttt{UserDetailsImpl.java}), ngoài các lỗi nằm trong 43 tiêu chí của Check-list, phát hiện 2 vấn đề nghiêm trọng:
+Trong quá trình review 3 tệp mã nguồn thuộc phân công (\texttt{VilleServiceImpl}, \texttt{AdminStatsController}, \texttt{UserDetailsImpl}), ngoài các lỗi nằm trong 43 tiêu chí của Check-list, phát hiện 2 vấn đề nghiêm trọng:
 \begin{itemize}
   \item \textbf{Cache không hoạt động do gọi method trong cùng class trong \texttt{VilleServiceImpl.java} (Dòng 98, 107, 115):} Spring xử lý \texttt{@CachePut}/\texttt{@CacheEvict} thông qua proxy, nên lời gọi \texttt{this.deleteById()} hay \texttt{this.updateDTO()} từ bên trong class sẽ bỏ qua cache. Hậu quả: sau \texttt{delete(ville)}, \texttt{findDTOById(id)} vẫn trả về thành phố đã bị xoá. \textit{Đề xuất:} đặt annotation cache trực tiếp trên \texttt{delete()}/\texttt{update()}, hoặc gọi qua bean được inject.
   \item \textbf{Không kiểm tra dữ liệu đầu vào trong \texttt{AdminStatsController.java} (Dòng 79--81, 114--116):} \texttt{quarter}, \texttt{threshold} và \texttt{year} không được kiểm tra khoảng giá trị (quý 1--4, ngưỡng 0--100\%). \textit{Đề xuất:} dùng Bean Validation (\texttt{@Min}, \texttt{@Max}, \texttt{@DecimalMin}, \texttt{@DecimalMax}) với \texttt{@Validated}.
 \end{itemize}
 
 \subsection{Lê Sĩ Nhật Quang}
-Trong quá trình kiểm duyệt 4 tệp mã nguồn thuộc phân công (\texttt{AdminVilleController.java}, \texttt{AdminBilletController.java}, \texttt{AdminClientController.java} và \texttt{ClasseController.java}), ngoài các lỗi nằm trong 43 tiêu chí của Check-list, bản thân tôi đã phát hiện 5 vấn đề kỹ thuật, logic nghiệp vụ và bảo mật nghiêm trọng:
+Trong quá trình review 4 tệp mã nguồn thuộc phân công (\texttt{AdminVilleController}, \texttt{AdminBilletController}, \texttt{AdminClientController} và \texttt{ClasseController}), ngoài các lỗi nằm trong 43 tiêu chí của Check-list, bản thân tôi đã phát hiện 5 vấn đề kỹ thuật, logic nghiệp vụ và bảo mật nghiêm trọng:
 \begin{itemize}
   \item \textbf{Lỗi không thể biên dịch mã nguồn (Compilation Error) trong \texttt{AdminVilleController.java} (Dòng 68, 75):} Tại phương thức \texttt{editVille()}, tham số đầu vào được khai báo viết hoa là \texttt{@PathVariable("id") Long ID} (dòng 68), nhưng tại nhánh \texttt{else} (dòng 75) câu lệnh lại tham chiếu đến biến viết thường chưa từng được khai báo là \texttt{id} (\texttt{"Ville not found with ID: " + id}). Cần đổi tên tham số ở dòng 68 và lời gọi hàm ở dòng 69 thành chữ thường \texttt{id} để mã nguồn có thể biên dịch.
   \item \textbf{Lỗi logic nghiệp vụ thiếu nhánh cập nhật dữ liệu trong \texttt{AdminBilletController.java} (Dòng 75, 81):} Phương thức \texttt{saveBillet()} được dùng chung cho cả chức năng thêm mới và chỉnh sửa vé (thể hiện qua biểu thức kiểm tra \texttt{billet.getId() == null ? "Add" : "Edit"} ở dòng 75). Tuy nhiên, tại dòng 81, mã nguồn lại gọi cố định \texttt{billetService.create(billet)} cho mọi trường hợp mà không rẽ nhánh gọi \texttt{update} khi \texttt{billet.getId() != null}, dẫn đến lỗi tạo trùng bản ghi hoặc xung đột khóa chính khi cập nhật vé. Cần bổ sung câu lệnh điều kiện \texttt{if (billet.getId() == null)} để phân tách rõ thao tác tạo mới và cập nhật.
@@ -224,7 +224,7 @@ Trong quá trình kiểm duyệt 4 tệp mã nguồn thuộc phân công (\textt
 \end{itemize}
 
 \subsection{Đào Xuân Sơn}
-Ngoài các mục trong checklist định sẵn, nhóm đã phát hiện các lỗi kiến trúc và vận hành nghiêm trọng (Critical Runtime Bugs) có thể gây ảnh hưởng trực tiếp đến trải nghiệm người dùng và tính an toàn của hệ thống:
+Trong quá trình review 3 tệp mã nguồn thuộc phân công (\texttt{BookingDetailsController}, \texttt{SideBarController}, \texttt{SignupController}), ngoài các lỗi nằm trong 43 tiêu chí của Check-list, phát hiện 2 vấn đề nghiêm trọng:
 \begin{itemize}
   \item \textbf{Kẹt hiệu ứng mờ UI (Memory Leak / UI Lockout) trong \texttt{BookingDetailsController} (Dòng 68--70):} Tạo hiệu ứng mờ \texttt{GaussianBlur(10)} lên giao diện gốc khi mở cửa sổ phụ nhưng không có hàm gỡ bỏ (\texttt{setEffect(null)}) khi đóng cửa sổ. \textit{Giải pháp:} Đăng ký sự kiện \texttt{setOnHidden} để khôi phục lại hiệu ứng giao diện gốc.
   \item \textbf{Xung đột dữ liệu tĩnh (Static State Contamination) trong \texttt{BookingDetailsController} (Dòng 36, 51):} Khai báo biến static (\texttt{vol}, \texttt{reservation}) dẫn đến ghi đè dữ liệu giữa các phiên làm việc hoặc các tab khác nhau. \textit{Giải pháp:} Chuyển sang biến thuộc tính đối tượng (instance field) hoặc quản lý qua State Manager.
@@ -234,15 +234,10 @@ Ngoài các mục trong checklist định sẵn, nhóm đã phát hiện các l�
 \end{itemize}
 
 \subsection{Sơn Văn Phát}
-Trong quá trình kiểm duyệt 4 tệp mã nguồn thuộc phân công (\texttt{PersonalInfoController.java}, \texttt{PassengerEditorController.java}, \texttt{SearchResultsController.java}), ngoài các lỗi nằm trong 43 tiêu chí của Check-list, phát hiện 2 vấn đề kỹ thuật, logic nghiệp vụ và bảo mật nghiêm trọng:
+Trong quá trình kiểm duyệt 3 tệp mã nguồn thuộc phân công (\texttt{PersonalInfoController}, \texttt{PassengerEditorController}, \texttt{SearchResultsController}), ngoài các lỗi nằm trong 43 tiêu chí của Check-list, phát hiện 2 vấn đề kỹ thuật, logic nghiệp vụ và bảo mật nghiêm trọng:
 \begin{itemize}
-  \item \textbf{E5. Treo giao diện do I/O đồng bộ (UI Freeze) trong \texttt{PersonalInfoController.java} (dòng 73--76); \texttt{SearchResultsController.java} (dòng 33--39, 79); \texttt{Client.java} (dòng 28, 54, 92, 130):} Các handler của JavaFX gọi HTTP ngay trên luồng xử lý giao diện. Client dùng OkHttp \texttt{Call.execute()}, là lời gọi đồng bộ; trang kết quả còn gọi API lấy giá một lần cho mỗi chuyến bay. Khi mạng phản hồi chậm, giao diện có thể không phản hồi trong thời gian chờ. \textit{Giải pháp:} chuyển yêu cầu mạng sang \texttt{Task}/\texttt{Executor}, chỉ cập nhật \texttt{Node} trên JavaFX Application Thread, và vô hiệu hóa nút đăng ký lúc đang gửi. Bản Java sau sửa hiện chưa xử lý phần luồng nền.
-  \item \textbf{E6. Không phân biệt đăng ký thành công và đăng nhập thất bại trong \texttt{PersonalInfoController.java} (dòng 73--78):} Controller tạo tài khoản rồi đăng nhập bằng hai request liên tiếp trong cùng một \texttt{try/catch}. Nếu request đăng ký đã hoàn tất ở máy chủ nhưng bước đăng nhập thất bại, màn hình chỉ xử lý một lỗi chung; người dùng có thể thử đăng ký lại email đã tồn tại. \textit{Giải pháp:} tách trạng thái của hai bước. Sau khi tạo tài khoản thành công mà đăng nhập lỗi, thông báo tài khoản đã được tạo và chuyển sang màn đăng nhập. Bản Java sau sửa vẫn có một \texttt{catch} chung nên nguy cơ này còn tồn tại.
-\end{itemize}
-
-\subsection{Nhận xét chung (client)}
-\begin{itemize}
-  \item \textbf{Trạng thái \texttt{static} giữa các màn hình trong \texttt{BookingDetailsController}, \texttt{SignupController}, \texttt{PassengerEditorController}:} Dữ liệu được truyền qua field \texttt{static} (có chỗ \texttt{public static}). \textit{Đề xuất:} truyền qua instance controller (\texttt{FXMLLoader.getController()}).
+  \item \textbf{Treo giao diện do I/O đồng bộ (UI Freeze) trong \texttt{PersonalInfoController.java} (dòng 73--76); \texttt{SearchResultsController.java} (dòng 33--39, 79); \texttt{Client.java} (dòng 28, 54, 92, 130):} Các handler của JavaFX gọi HTTP ngay trên luồng xử lý giao diện. Client dùng OkHttp \texttt{Call.execute()}, là lời gọi đồng bộ; trang kết quả còn gọi API lấy giá một lần cho mỗi chuyến bay. Khi mạng phản hồi chậm, giao diện có thể không phản hồi trong thời gian chờ. \textit{Giải pháp:} chuyển yêu cầu mạng sang \texttt{Task}/\texttt{Executor}, chỉ cập nhật \texttt{Node} trên JavaFX Application Thread, và vô hiệu hóa nút đăng ký lúc đang gửi. Bản Java sau sửa hiện chưa xử lý phần luồng nền.
+  \item \textbf{Không phân biệt đăng ký thành công và đăng nhập thất bại trong \texttt{PersonalInfoController.java} (dòng 73--78):} Controller tạo tài khoản rồi đăng nhập bằng hai request liên tiếp trong cùng một \texttt{try/catch}. Nếu request đăng ký đã hoàn tất ở máy chủ nhưng bước đăng nhập thất bại, màn hình chỉ xử lý một lỗi chung; người dùng có thể thử đăng ký lại email đã tồn tại. \textit{Giải pháp:} tách trạng thái của hai bước. Sau khi tạo tài khoản thành công mà đăng nhập lỗi, thông báo tài khoản đã được tạo và chuyển sang màn đăng nhập. Bản Java sau sửa vẫn có một \texttt{catch} chung nên nguy cơ này còn tồn tại.
 \end{itemize}
 
 % ================= 6 =================
